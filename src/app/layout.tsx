@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import {Provider} from "@/components/ui/popover"
 import localFont from 'next/font/local';
 
 import './globals.css';
