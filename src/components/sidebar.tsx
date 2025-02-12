@@ -1,7 +1,13 @@
+"use client";
+
 import { cn } from '@udecode/cn';
+import { useState, useCallback, useEffect } from 'react';
 
 interface SidebarProps {
   className?: string;
+  defaultWidth?: number;
+  minWidth?: number;
+  maxWidth?: number;
 }
 
 // 定义笔记项的类型
@@ -78,11 +84,11 @@ const NoteTreeItem = ({ item }: { item: NoteItem }) => {
     return (
       <li>
         <details open>
-          <summary className="flex items-center gap-3 px-4 py-2 text-base">
+          <summary>
             {getIcon()}
             {item.title}
           </summary>
-          <ul className="menu">
+          <ul>
             {item.children.map((child) => (
               <NoteTreeItem key={child.id} item={child} />
             ))}
@@ -94,7 +100,7 @@ const NoteTreeItem = ({ item }: { item: NoteItem }) => {
 
   return (
     <li>
-      <a className="flex items-center gap-3 px-4 py-2 text-base">
+      <a className="flex items-center gap-3">
         {getIcon()}
         {item.title}
       </a>
@@ -102,7 +108,52 @@ const NoteTreeItem = ({ item }: { item: NoteItem }) => {
   );
 };
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ 
+  className,
+  defaultWidth = 280,
+  minWidth = 280,
+  maxWidth = 600
+}: SidebarProps) {
+  const [width, setWidth] = useState(defaultWidth);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // 处理拖拽调节宽度
+  const handleMouseDown = useCallback(() => {
+    setIsResizing(true);
+  }, []);
+
+  // 处理拖拽过程中的宽度调整
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      let newWidth = e.clientX;
+      
+      // 限制最小和最大宽度
+      if (newWidth < minWidth) newWidth = minWidth;
+      if (newWidth > maxWidth) newWidth = maxWidth;
+      
+      setWidth(newWidth);
+    },
+    [isResizing, minWidth, maxWidth]
+  );
+
+  // 处理拖拽结束
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // 添加和移除事件监听器
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
   // 示例数据结构
   const notes: NoteItem[] = [
     {
@@ -125,6 +176,14 @@ export function Sidebar({ className }: SidebarProps) {
               type: 'folder',
               children: [
                 { id: '8', title: 'screenshot3.png', type: 'image' },
+                { id: '9', title: 'screenshot4.png', type: 'folder',
+                  children:[
+                    { id: '10', title: 'screenshot5.png', type: 'image' },
+                    { id: '11', title: 'fdsafds', type:"folder", children:[
+                    { id: '12', title: 'screenshot5.png', type: 'image' },
+                    ]}
+                  ]
+                 },
               ],
             },
           ],
@@ -136,7 +195,10 @@ export function Sidebar({ className }: SidebarProps) {
   ];
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div 
+      className={cn('flex flex-col h-full relative', className)}
+      style={{ width: `${width}px` }}
+    >
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between p-4">
         <h2 className="text-lg font-semibold">我的笔记</h2>
@@ -163,13 +225,23 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* 笔记目录树 */}
-      <div className="flex-1 overflow-auto px-2">
-        <ul className="menu rounded-box max-w-xs w-full">
+      <div className="flex-1 overflow-y-auto">
+        <ul className="menu menu-md rounded-box w-full">
           {notes.map((note) => (
             <NoteTreeItem key={note.id} item={note} />
           ))}
         </ul>
       </div>
+
+      {/* 拖拽调节器 */}
+      <div
+        className={cn(
+          'absolute right-0 top-0 bottom-0 w-1 cursor-col-resize',
+          'hover:bg-primary/10 transition-colors',
+          isResizing && 'bg-primary/20'
+        )}
+        onMouseDown={handleMouseDown}
+      />
     </div>
   );
 } 
