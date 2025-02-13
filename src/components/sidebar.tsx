@@ -111,7 +111,7 @@ const NoteTreeItem = ({ item }: { item: NoteItem }) => {
 export function Sidebar({ 
   className,
   defaultWidth = 280,
-  minWidth = 280,
+  minWidth = 200,
   maxWidth = 600
 }: SidebarProps) {
   const [width, setWidth] = useState(defaultWidth);
@@ -225,8 +225,8 @@ export function Sidebar({
       </div>
 
       {/* 笔记目录树 */}
-      <div className="flex-1 overflow-y-auto">
-        <ul className="menu menu-md rounded-box w-full">
+      <div className="flex-1 overflow-hidden">
+        <ul className="menu menu-md w-full h-full overflow-y-auto px-2">
           {notes.map((note) => (
             <NoteTreeItem key={note.id} item={note} />
           ))}
